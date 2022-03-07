@@ -1,0 +1,15 @@
+{
+  "name": "mmm-it8951",
+  "version": "1.0.0",
+  "description": "Displaying MagicMirror² screen on a Waveshare eink with IT8951",
+  "main": "MMM-IT8951.js",
+  "author": "Sébastien Mazzon",
+  "license": "MIT",
+  "dependencies": {
+    "gyp": "^0.5.0",
+    "node-gyp": "^8.4.1",
+    "node-it8951": "^0.0.1",
+    "puppeteer": "^13.0.1",
+    "sharp": "^0.29.3"
+  }
+}
