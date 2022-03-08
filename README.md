@@ -13,17 +13,26 @@ The IT8951 is typically used by some Waveshare epaper screens.
 To use this module, add the following configuration block to the modules array in the `config/config.js` file:
 ```js
 var config = {
-    modules: [
-        {
-            module: 'MMM-IT8951',
-            config: {
-            updateInterval: 60 * 1000, // 1 minute // Full refresh screen
-            bufferDelay: 1000, // 1 second // Delay before taking updated items
-            driverParam: {MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}, // see https://github.com/gaweee/node-it8951#functions-calls
-            mock: false,
-        },
-    ]
+	modules: [
+		{
+			module: 'MMM-IT8951',
+			config: {
+			updateInterval: 60 * 1000, // 1 minute // Full refresh screen
+			bufferDelay: 1000, // 1 second // Delay before taking updated items
+			driverParam: {MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}, // see https://github.com/gaweee/node-it8951#functions-calls
+			mock: false,
+		},
+	]
 }
+```
+
+## Installation
+
+```sh
+cd ~/MagicMirror/modules # Change path to modules directory of to your actual MagiMirror² installation
+git clone https://github.com/seb-ma/MMM-IT8951
+cd MMM-IT8951
+npm install --only=production
 ```
 
 ## Configuration options
