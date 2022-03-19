@@ -6,11 +6,12 @@ This module communicates with a IT8951 card to display MagicMirror² on a e-ink 
 It opens MagicMirror² page on a Chrome browser (with Puppeteer) and observe each DOM update.
 Periodically, the e-ink is fully refreshed and partially refreshed on DOM update.
 
-The IT8951 is typically used by some Waveshare epaper screens.
+The IT8951 is typically used by some Waveshare e-paper screens.
 
 ## Using the module
 
 To use this module, add the following configuration block to the modules array in the `config/config.js` file:
+
 ```js
 var config = {
 	modules: [
@@ -49,6 +50,7 @@ npm install --only=production
 To force a full refresh of the e-ink screen, the notification `IT8951_ASK_FULL_REFRESH` must be sent.
 
 Exemple to send it from another module:
+
 ```js
 this.sendNotification("IT8951_ASK_FULL_REFRESH");
 ```

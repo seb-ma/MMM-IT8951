@@ -15,6 +15,7 @@ module.exports = NodeHelper.create({
 
 	url: (config.useHttps ? "https://" : "http://") + config.address + ":" + config.port + config.basePath,
 	isInitialized: false,
+	config: {},
 	stackAreas: [],
 
 	start: function() {
@@ -37,15 +38,15 @@ module.exports = NodeHelper.create({
 			this.display.init();
 			Log.log("IT8951 initialized");
 		} else {
-			this.display = {width: config.electronOptions.width  ? config.electronOptions.width  : 1872,
+			this.display = {width: config.electronOptions.width ? config.electronOptions.width : 1872,
 							height: config.electronOptions.height ? config.electronOptions.height : 1404,}
 		}
 
 		// Adjust Puppteer viewport
 		(async () => {
-			await this.page.setViewport({width: this.display.width, height: this.display.height, deviceScaleFactor: 1,});
+			await this.page.setViewport({width: this.display.width, height: this.display.height, deviceScaleFactor: 1});
 		})();
-		
+
 		// Initialisation is finished
 		this.isInitialized = true;
 
@@ -82,7 +83,7 @@ module.exports = NodeHelper.create({
 				this.processStack();
 			}
 		});
-		
+
 		await this.page.evaluate(() => {
 			// Callback on mutations
 			const observer = new MutationObserver((mutations, observer) => {
@@ -93,7 +94,7 @@ module.exports = NodeHelper.create({
 					if (rectMut.width !== 0 && rectMut.height !== 0) {
 						// Extends area to nearest pixels
 						rect = {left: Math.floor(Math.min(rect.left, rectMut.left)), top: Math.floor(Math.min(rect.top, rectMut.top)),
-							right: Math.ceil(Math.max(rect.right, rectMut.right)), bottom: Math.ceil(Math.max(rect.bottom, rectMut.bottom))};	
+							right: Math.ceil(Math.max(rect.right, rectMut.right)), bottom: Math.ceil(Math.max(rect.bottom, rectMut.bottom))};
 					}
 				}
 				if (rect.left < rect.right && rect.top < rect.bottom) {
@@ -114,7 +115,7 @@ module.exports = NodeHelper.create({
 		})();
 
 		// Stop IT8951
-		if (!this.config.mock) {
+		if (this.config.mock === false && this.display !== undefined) {
 			this.display.clear();
 			this.display.close();
 		}
@@ -170,7 +171,7 @@ module.exports = NodeHelper.create({
 	// Override socketNotificationReceived method.
 	socketNotificationReceived: function(notification, payload) {
 		if (!this.isInitialized && notification === "CONFIG") {
-			this.config = payload;			
+			this.config = payload;
 			this.initializeEink();
 		} else if (this.isInitialized && notification === "IT8951_ASK_FULL_REFRESH") {
 			this.fullRefresh();

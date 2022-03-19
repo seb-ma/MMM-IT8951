@@ -1,15 +1,32 @@
 {
   "name": "mmm-it8951",
   "version": "1.0.0",
-  "description": "Displaying MagicMirror² screen on a Waveshare eink with IT8951",
+  "description": "This MagicMirror² module communicates with a IT8951 card to display MagicMirror² on a e-ink screen using IT8951 drivers.",
   "main": "MMM-IT8951.js",
   "author": "Sébastien Mazzon",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seb-ma/MMM-IT8951"
+  },
+  "keywords": [
+    "magic-mirror-modules",
+    "magicmirror2",
+    "eink",
+    "it8951",
+    "waveshare-eink"
+  ],
   "dependencies": {
-    "gyp": "^0.5.0",
-    "node-gyp": "^8.4.1",
     "node-it8951": "^0.0.1",
-    "puppeteer": "^13.0.1",
-    "sharp": "^0.29.3"
+    "puppeteer": "^13.5.1",
+    "sharp": "^0.30.2"
+  },
+  "devDependencies": {
+    "gyp": "^0.5.0",
+    "node-gyp": "^9.0.0",
+    "electron-rebuild": "^3.2.7"
+  },
+  "scripts": {
+    "postinstall": "node_modules/.bin/electron-rebuild -e ../../node_modules/electron"
   }
 }
