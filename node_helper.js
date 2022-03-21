@@ -18,11 +18,15 @@ module.exports = NodeHelper.create({
 	config: {},
 	stackAreas: [],
 
+	isCurrentUserRoot: function() {
+		return process.getuid() == 0; // UID 0 is always root
+	},
+
 	start: function() {
 		Log.log("Starting node helper for: " + this.name);
 		// Start Puppeteer with IT8951 resolution
 		(async () => {
-			this.browser = await Puppeteer.launch();
+			this.browser = await Puppeteer.launch({args: this.isCurrentUserRoot() ? ['--no-sandbox'] : undefined});
 			this.page = await this.browser.newPage();
 			const url = this.url;
 			await this.page.goto(url, {waitUntil: "load"});
@@ -42,7 +46,7 @@ module.exports = NodeHelper.create({
 							height: config.electronOptions.height ? config.electronOptions.height : 1404,}
 		}
 
-		// Adjust Puppteer viewport
+		// Adjust Puppeteer viewport
 		(async () => {
 			await this.page.setViewport({width: this.display.width, height: this.display.height, deviceScaleFactor: 1});
 		})();
@@ -104,7 +108,7 @@ module.exports = NodeHelper.create({
 
 			// Observe mutation in target
 			const target = document.querySelector("body");
-			observer.observe(target, { childList: true, subtree: true });
+			observer.observe(target, {childList: true, subtree: true});
 		});
 	},
 
@@ -149,23 +153,40 @@ module.exports = NodeHelper.create({
 	},
 
 	displayIT8951: async function(imageDesc) {
-		// Convert png to raw
-		const { data, info } = await Sharp(imageDesc.image)
-			// output the raw pixels
-			.raw()
-			// data is a Buffer containing uint8 values (0-255)
-			// with each byte representing one pixel
-			.toBuffer({ resolveWithObject: true });
-
 		// Display buffer
 		if (!this.config.mock) {
-			this.display.draw(data,
+			// Convert png to raw
+			const {data, info} = await Sharp(imageDesc.image)
+				// greyscale on 1 channel
+				.gamma().greyscale().toColourspace("b-w")
+				// output the raw pixels
+				.raw()
+				// data is a Buffer containing uint8 values (0-255)
+				// with each byte representing one pixel
+				.toBuffer({resolveWithObject: true});
+
+			this.display.draw(this.downscale8bitsTo4bits(data),
 				imageDesc.rect.x, imageDesc.rect.y,
 				imageDesc.rect.width, imageDesc.rect.height);
 		} else {
 			this.inc = (this.inc === undefined) ? 0 : (this.inc + 1) % 200;
-			await Sharp(imageDesc.image).toFile("/tmp/screenshot-" + this.inc + ".png");
+			await Sharp(imageDesc.image)
+				// Apply equivalent transformation as for e-paper
+				.gamma().greyscale().toColourspace("b-w")
+				// 16 colors (shades of grey)
+				.png({colours: 16})
+				// Save file
+				.toFile("/tmp/screenshot-" + this.inc + ".png");
 		}
+	},
+
+	downscale8bitsTo4bits: function(buffer) {
+		let buffer4b = Buffer.alloc(buffer.length / 2);
+		for (let i = 0; i < buffer.length / 2; i++) {
+			// Iterate by 2 bytes. Get the 4-high bits of each byte
+			buffer4b[i] = (buffer[2 * i] & 0xF0) | (buffer[(2 * i) + 1] >> 4);
+		}
+		return buffer4b;
 	},
 
 	// Override socketNotificationReceived method.
