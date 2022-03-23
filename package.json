@@ -19,7 +19,7 @@
   "dependencies": {
     "node-it8951": "^0.0.1",
     "puppeteer": "^13.5.1",
-    "sharp": "^0.30.2"
+    "sharp": "^0.30.3"
   },
   "devDependencies": {
     "gyp": "^0.5.0",
@@ -27,6 +27,6 @@
     "electron-rebuild": "^3.2.7"
   },
   "scripts": {
-    "postinstall": "node_modules/.bin/electron-rebuild -e ../../node_modules/electron"
+    "postinstall": "# node_modules/.bin/electron-rebuild -e ../../node_modules/electron"
   }
 }
