@@ -18,50 +18,58 @@ module.exports = NodeHelper.create({
 	config: {},
 	stackAreas: [],
 
-	isCurrentUserRoot: function() {
+	isCurrentUserRoot: function () {
 		return process.getuid() == 0; // UID 0 is always root
 	},
 
-	start: function() {
+	start: function () {
 		Log.log("Starting node helper for: " + this.name);
 		// Start Puppeteer with IT8951 resolution
 		(async () => {
-			this.browser = await Puppeteer.launch({args: this.isCurrentUserRoot() ? ['--no-sandbox'] : undefined});
+			let puppeteerArgs = ["--disable-gpu"]; // Hack: sometimes puppeteer does not start if gpu is enabled
+			if (this.isCurrentUserRoot()) {
+				puppeteerArgs.push("--no-sandbox");
+			}
+			this.browser = await Puppeteer.launch({ args: puppeteerArgs });
 			this.page = await this.browser.newPage();
 			const url = this.url;
-			await this.page.goto(url, {waitUntil: "load"});
+			await this.page.goto(url, { waitUntil: "load" });
 
 			Log.log("Puppeteer launched on " + url);
 		})();
 	},
 
-	initializeEink: function() {
+	initializeEink: function () {
 		// Start IT8951
 		this.display = new IT8951(this.config.driverParam);
 		if (!this.config.mock) {
 			this.display.init();
 			Log.log("IT8951 initialized");
 		} else {
-			this.display = {width: config.electronOptions.width ? config.electronOptions.width : 1872,
-							height: config.electronOptions.height ? config.electronOptions.height : 1404,}
+			this.display = {
+				width: config.electronOptions.width ? config.electronOptions.width : 1872,
+				height: config.electronOptions.height ? config.electronOptions.height : 1404,
+			}
 		}
 
 		// Adjust Puppeteer viewport
 		(async () => {
-			await this.page.setViewport({width: this.display.width, height: this.display.height, deviceScaleFactor: 1});
+			await this.page.setViewport({ width: this.display.width, height: this.display.height, deviceScaleFactor: 1 });
 		})();
 
 		// Initialisation is finished
 		this.isInitialized = true;
 
 		this.fullRefresh();
-		(async () => {
-			await this.initObservers();
-		})();
+		if (typeof (this.config.bufferDelay) === "number") {
+			(async () => {
+				await this.initObservers();
+			})();
+		}
 	},
 
 	// Process DOM mutations. Wait the buffer delay before processing in order to process only 1 time each area that have multiple fast mutations
-	processStack: async function() {
+	processStack: async function () {
 		// Wait before processing stack
 		await new Promise(r => setTimeout(r, this.config.bufferDelay));
 		let rectDone = [];
@@ -78,7 +86,7 @@ module.exports = NodeHelper.create({
 		}
 	},
 
-	initObservers: async function() {
+	initObservers: async function () {
 		await this.page.exposeFunction("puppeteerMutation", (rect) => {
 			// Add the area to process
 			this.stackAreas.push(rect);
@@ -91,14 +99,19 @@ module.exports = NodeHelper.create({
 		await this.page.evaluate(() => {
 			// Callback on mutations
 			const observer = new MutationObserver((mutations, observer) => {
-				var rect = {left: Number.MAX_SAFE_INTEGER, top: Number.MAX_SAFE_INTEGER, right: 0, bottom: 0};
+				const ceil32 = function (x) { return Math.ceil(x / 32) * 32; };
+				const floor32 = function (x) { return Math.floor(x / 32) * 32; };
+
+				var rect = { left: Number.MAX_SAFE_INTEGER, top: Number.MAX_SAFE_INTEGER, right: 0, bottom: 0 };
 				for (const mutation of mutations) {
 					//puppeteerMutation(mutation.target.getBoundingClientRect());
 					rectMut = mutation.target.getBoundingClientRect();
 					if (rectMut.width !== 0 && rectMut.height !== 0) {
-						// Extends area to nearest pixels
-						rect = {left: Math.floor(Math.min(rect.left, rectMut.left)), top: Math.floor(Math.min(rect.top, rectMut.top)),
-							right: Math.ceil(Math.max(rect.right, rectMut.right)), bottom: Math.ceil(Math.max(rect.bottom, rectMut.bottom))};
+						// Extends area to nearest pixels (with modulo 32 for left/right - hack needed because of some glitches at display)
+						rect = {
+							left: floor32(Math.min(rect.left, rectMut.left)), top: Math.floor(Math.min(rect.top, rectMut.top)),
+							right: ceil32(Math.max(rect.right, rectMut.right)), bottom: Math.ceil(Math.max(rect.bottom, rectMut.bottom))
+						};
 					}
 				}
 				if (rect.left < rect.right && rect.top < rect.bottom) {
@@ -108,11 +121,11 @@ module.exports = NodeHelper.create({
 
 			// Observe mutation in target
 			const target = document.querySelector("body");
-			observer.observe(target, {childList: true, subtree: true});
+			observer.observe(target, { childList: true, subtree: true });
 		});
 	},
 
-	stop: function() {
+	stop: function () {
 		// Stop Puppeteer
 		(async () => {
 			await this.browser.close();
@@ -136,34 +149,34 @@ module.exports = NodeHelper.create({
 		})();
 
 		// Schedule next update
-		this.refreshTimeout = setTimeout(function(self) {
+		this.refreshTimeout = setTimeout(function (self) {
 			self.fullRefresh();
 		}, this.config.updateInterval, self);
 	},
 
 	// rect may not be defined for a full page screenshot
-	captureScreen: async function(rect) {
+	captureScreen: async function (rect) {
 		if (rect === undefined || rect === "") {
 			// Default target if no parameter: full page
-			rect = {x: 0, y: 0, width: this.display.width, height: this.display.height};
+			rect = { x: 0, y: 0, width: this.display.width, height: this.display.height };
 		}
 		// Screenshot of the area in buffer
-		const image = await this.page.screenshot({type: "png", clip: rect});
-		return {image: image, rect: rect};
+		const image = await this.page.screenshot({ type: "png", clip: rect });
+		return { image: image, rect: rect };
 	},
 
-	displayIT8951: async function(imageDesc) {
+	displayIT8951: async function (imageDesc) {
 		// Display buffer
 		if (!this.config.mock) {
 			// Convert png to raw
-			const {data, info} = await Sharp(imageDesc.image)
+			const { data, info } = await Sharp(imageDesc.image)
 				// greyscale on 1 channel
 				.gamma().greyscale().toColourspace("b-w")
 				// output the raw pixels
 				.raw()
 				// data is a Buffer containing uint8 values (0-255)
 				// with each byte representing one pixel
-				.toBuffer({resolveWithObject: true});
+				.toBuffer({ resolveWithObject: true });
 
 			this.display.draw(this.downscale8bitsTo4bits(data),
 				imageDesc.rect.x, imageDesc.rect.y,
@@ -174,13 +187,13 @@ module.exports = NodeHelper.create({
 				// Apply equivalent transformation as for e-paper
 				.gamma().greyscale().toColourspace("b-w")
 				// 16 colors (shades of grey)
-				.png({colours: 16})
+				.png({ colours: 16 })
 				// Save file
 				.toFile("/tmp/screenshot-" + this.inc + ".png");
 		}
 	},
 
-	downscale8bitsTo4bits: function(buffer) {
+	downscale8bitsTo4bits: function (buffer) {
 		let buffer4b = Buffer.alloc(buffer.length / 2);
 		for (let i = 0; i < buffer.length / 2; i++) {
 			// Iterate by 2 bytes. Get the 4-high bits of each byte
@@ -190,7 +203,7 @@ module.exports = NodeHelper.create({
 	},
 
 	// Override socketNotificationReceived method.
-	socketNotificationReceived: function(notification, payload) {
+	socketNotificationReceived: function (notification, payload) {
 		if (!this.isInitialized && notification === "CONFIG") {
 			this.config = payload;
 			this.initializeEink();

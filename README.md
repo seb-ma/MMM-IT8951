@@ -18,10 +18,11 @@ var config = {
 		{
 			module: 'MMM-IT8951',
 			config: {
-			updateInterval: 60 * 1000, // 1 minute // Full refresh screen
-			bufferDelay: 1000, // 1 second // Delay before taking updated items
-			driverParam: {MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}, // see https://github.com/gaweee/node-it8951#functions-calls
-			mock: false,
+				updateInterval: 60 * 1000, // 1 minute // Full refresh screen
+				bufferDelay: 1000, // 1 second // Delay before taking updated items
+				driverParam: {MAX_BUFFER_SIZE: 4096, VCOM: 1480}, // see https://github.com/gaweee/node-it8951#functions-calls
+				mock: false,
+			},
 		},
 	]
 }
@@ -41,7 +42,7 @@ npm install --only=production
 | Option           | Description
 |----------------- |------------
 | `updateInterval` | *Optional* Full refresh screen interval <br><br>**Type:** `int`(milliseconds) <br>Default: 60000 (1 minute)
-| `bufferDelay`    | *Optional* Delay before taking updated items in DOM to refresh parts of screen <br><br>**Type:** `int`(milliseconds) <br>Default: 1000 (1 second)
+| `bufferDelay`    | *Optional* Delay before taking updated items in DOM to refresh parts of screen <br><br>**Type:** `int`(milliseconds) <br>Default: 1000 (1 second)<br>Set `undefined` to ignore partial refresh
 | `driverParam`    | *Optional* Parameter to initialize IT8951 driver. See https://github.com/gaweee/node-it8951#functions-calls <br>Default: `{MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}`
 | `mock`           | *Optional* `true` to retrieve not initialize IT8951 driver and store png files of changed areas in `/tmp` instead<br><br>**Type:** `boolean` <br>Default: `false`
 
@@ -49,7 +50,7 @@ npm install --only=production
 
 To force a full refresh of the e-ink screen, the notification `IT8951_ASK_FULL_REFRESH` must be sent.
 
-Exemple to send it from another module:
+Example to send it from another module:
 
 ```js
 this.sendNotification("IT8951_ASK_FULL_REFRESH");
