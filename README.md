@@ -6,6 +6,9 @@ This module communicates with a IT8951 card to display MagicMirror² on a e-ink 
 It opens MagicMirror² page on a Chrome browser (with Puppeteer) and observe each DOM update.
 Periodically, the e-ink is fully refreshed and partially refreshed on DOM update.
 
+Partial refresh is done in a flashy way by default (that is needed to support the 16 gray levels) but if image if only B/W (without gray), the refresh mode is changed to have a direct update without flash.
+Another way to have a fast refresh without flash is by adding the CSS class `eink-4levels` to a module. Thus, the refresh is forced to 4-level gray only.
+
 The IT8951 is typically used by some Waveshare e-paper screens.
 
 ## Using the module
@@ -16,14 +19,18 @@ To use this module, add the following configuration block to the modules array i
 var config = {
 	modules: [
 		{
-			module: 'MMM-IT8951',
+			module: "MMM-IT8951",
 			config: {
 				updateInterval: 60 * 1000, // 1 minute // Full refresh screen
 				bufferDelay: 1000, // 1 second // Delay before taking updated items
-				driverParam: {MAX_BUFFER_SIZE: 4096, VCOM: 1480}, // see https://github.com/gaweee/node-it8951#functions-calls
+				driverParam: { MAX_BUFFER_SIZE: 4096, VCOM: 1480 }, // see https://github.com/gaweee/node-it8951#functions-calls
 				mock: false,
 			},
 		},
+		{
+			module: "foo", // One of your module you want to be refreshed in B/W only
+			classes: "eink-4levels", // This class forces non flashy (but only on 4-levels gray) update of this module by MMM-IT8951
+		}
 	]
 }
 ```

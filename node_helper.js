@@ -87,12 +87,20 @@ module.exports = NodeHelper.create({
 	},
 
 	initObservers: async function () {
-		await this.page.exposeFunction("puppeteerMutation", (rect) => {
-			// Add the area to process
-			this.stackAreas.push(rect);
-			// If this is not currently processing
-			if (this.stackAreas.length == 1) {
-				this.processStack();
+		await this.page.exposeFunction("puppeteerMutation", (rect, is4levels) => {
+			if (is4levels) {
+				// Display immediately
+				(async () => {
+					const imageDesc = await this.captureScreen(rect);
+					await this.displayIT8951(imageDesc, is4levels);
+				})();
+			} else {
+				// Add the area to process
+				this.stackAreas.push(rect);
+				// If this is not currently processing
+				if (this.stackAreas.length == 1) {
+					this.processStack();
+				}
 			}
 		});
 
@@ -104,8 +112,8 @@ module.exports = NodeHelper.create({
 
 				var rect = { left: Number.MAX_SAFE_INTEGER, top: Number.MAX_SAFE_INTEGER, right: 0, bottom: 0 };
 				for (const mutation of mutations) {
-					//puppeteerMutation(mutation.target.getBoundingClientRect());
 					rectMut = mutation.target.getBoundingClientRect();
+					is4levels = (mutation.target.closest(".eink-4levels") !== null);
 					if (rectMut.width !== 0 && rectMut.height !== 0) {
 						// Extends area to nearest pixels (with modulo 32 for left/right - hack needed because of some glitches at display)
 						rect = {
@@ -115,7 +123,7 @@ module.exports = NodeHelper.create({
 					}
 				}
 				if (rect.left < rect.right && rect.top < rect.bottom) {
-					puppeteerMutation(new DOMRect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top));
+					puppeteerMutation(new DOMRect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top), is4levels);
 				}
 			});
 
@@ -165,7 +173,7 @@ module.exports = NodeHelper.create({
 		return { image: image, rect: rect };
 	},
 
-	displayIT8951: async function (imageDesc) {
+	displayIT8951: async function (imageDesc, is4levels) {
 		// Display buffer
 		if (!this.config.mock) {
 			// Convert png to raw
@@ -178,28 +186,59 @@ module.exports = NodeHelper.create({
 				// with each byte representing one pixel
 				.toBuffer({ resolveWithObject: true });
 
-			this.display.draw(this.downscale8bitsTo4bits(data),
+			if (is4levels !== true) {
+				// Check if buffer may not be a B/W only
+				is4levels = this.isBufferOnlyBW(data);
+			}
+			// A fast non-flashy update mode that can go from any gray scale color to black or white
+			const DISPLAY_UPDATE_MODE_DU = 1;
+			const DISPLAY_UPDATE_MODE_DU4 = 7;
+			const display_mode = is4levels ? DISPLAY_UPDATE_MODE_DU4 : false;
+
+			this.display.draw(this.downscale8bitsTo4bits(data, is4levels),
 				imageDesc.rect.x, imageDesc.rect.y,
-				imageDesc.rect.width, imageDesc.rect.height);
+				imageDesc.rect.width, imageDesc.rect.height,
+				display_mode);
 		} else {
 			this.inc = (this.inc === undefined) ? 0 : (this.inc + 1) % 200;
 			await Sharp(imageDesc.image)
 				// Apply equivalent transformation as for e-paper
 				.gamma().greyscale().toColourspace("b-w")
 				// 16 colors (shades of grey)
-				.png({ colours: 16 })
+				.png({ colours: is4levels ? 4 : 16 })
 				// Save file
 				.toFile("/tmp/screenshot-" + this.inc + ".png");
 		}
 	},
 
-	downscale8bitsTo4bits: function (buffer) {
+	downscale8bitsTo4bits: function (buffer, is4levels) {
 		let buffer4b = Buffer.alloc(buffer.length / 2);
-		for (let i = 0; i < buffer.length / 2; i++) {
-			// Iterate by 2 bytes. Get the 4-high bits of each byte
-			buffer4b[i] = (buffer[2 * i] & 0xF0) | (buffer[(2 * i) + 1] >> 4);
+		if (is4levels) {
+			for (let i = 0; i < buffer.length / 2; i++) {
+				// Iterate by 2 bytes. Get the 4-high bits of each byte
+				// see https://www.waveshare.net/w/upload/c/c4/E-paper-mode-declaration.pdf for values to set
+				// DU4: This mode supports transitions from any gray tone to gray tones 1,6,11,16 (=> 0, 5, 10, 15)
+				buffer4b[i] = ((((buffer[2 * i] >> 4) % 4) * 5) << 4)
+					| (((buffer[(2 * i) + 1] >> 4) % 4) * 5);
+			}
+		} else {
+			for (let i = 0; i < buffer.length / 2; i++) {
+				// Iterate by 2 bytes. Get the 4-high bits of each byte
+				buffer4b[i] = (buffer[2 * i] & 0xF0) | (buffer[(2 * i) + 1] >> 4);
+			}
 		}
 		return buffer4b;
+	},
+
+	isBufferOnlyBW: function (buffer) {
+		for (let i = 0; i < buffer.length; i++) {
+			// Only check the 4-high bits (the 4-low bits will be ignored when pixel will converted to 16 gray-levels)
+			const val = buffer[i] >> 4;
+			if (val !== 0xF && val !== 0) {
+				return false;
+			}
+		}
+		return true;
 	},
 
 	// Override socketNotificationReceived method.
