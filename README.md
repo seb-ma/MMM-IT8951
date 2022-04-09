@@ -38,20 +38,51 @@ var config = {
 ## Installation
 
 ```sh
-cd ~/MagicMirror/modules # Change path to modules directory of to your actual MagiMirror² installation
+cd ~/MagicMirror/modules # Change path to modules directory of your actual MagiMirror² installation
 git clone https://github.com/seb-ma/MMM-IT8951
 cd MMM-IT8951
 npm install --only=production
+```
+
+### OS configuration related
+
+To be able to communicate with IT8951 card, SPI must be activated and permissions to communicate with.
+
+**On Raspberry OS:**
+
+⚠️ Currently, this module only works with the `root` user; thus it needs MagicMirror to be launched by `root` user.
+
+This is due to a problem accessing `/dev/mem`.
+It currently can't be accessed thru npm call at this stage, neither as `sudo npm` nor with sticky bit or `cap_sys_rawio` capability set.
+
+It works only with user `root` (`sudo su`).
+
+*For future reference, here, what should work:*
+
+```sh
+sudo raspi-config
+```
+
+Then, enable SPI:
+- Interfacing options
+- P4 SPI Enable / Disable automatic loading of SPI core module
+
+And add your user in `spi` group:
+
+```sh
+sudo adduser $USER spi
+sudo adduser $USER kmem
+
 ```
 
 ## Configuration options
 
 | Option           | Description
 |----------------- |------------
-| `updateInterval` | *Optional* Full refresh screen interval <br><br>**Type:** `int`(milliseconds) <br>Default: 60000 (1 minute)
-| `bufferDelay`    | *Optional* Delay before taking updated items in DOM to refresh parts of screen <br><br>**Type:** `int`(milliseconds) <br>Default: 1000 (1 second)<br>Set `undefined` to ignore partial refresh
-| `driverParam`    | *Optional* Parameter to initialize IT8951 driver. See https://github.com/gaweee/node-it8951#functions-calls <br>Default: `{MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}`
-| `mock`           | *Optional* `true` to retrieve not initialize IT8951 driver and store png files of changed areas in `/tmp` instead<br><br>**Type:** `boolean` <br>Default: `false`
+| `updateInterval` | *Optional* Full refresh screen interval<br><br>**Type:** `int` (milliseconds)<br>Default: 60000 (1 minute)
+| `bufferDelay`    | *Optional* Delay before taking updated items in DOM to refresh parts of screen<br><br>**Type:** `int` (milliseconds)<br>Default: 1000 (1 second)<br>Set `undefined` to ignore partial refresh
+| `driverParam`    | *Optional* Parameter to initialize IT8951 driver. See https://github.com/gaweee/node-it8951#functions-calls<br>Default: `{MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}`
+| `mock`           | *Optional* `true` to retrieve not initialize IT8951 driver and store png files of changed areas in `/tmp` instead<br><br>**Type:** `boolean`<br>Default: `false`
 
 ## Notifications
 
