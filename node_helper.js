@@ -39,7 +39,7 @@ module.exports = NodeHelper.create({
 		})();
 	},
 
-	initializeEink: function () {
+	initializeEink: async function () {
 		// Start IT8951
 		this.display = new IT8951(this.config.driverParam);
 		if (!this.config.mock) {
@@ -53,18 +53,14 @@ module.exports = NodeHelper.create({
 		}
 
 		// Adjust Puppeteer viewport
-		(async () => {
-			await this.page.setViewport({ width: this.display.width, height: this.display.height, deviceScaleFactor: 1 });
-		})();
+		await this.page.setViewport({ width: this.display.width, height: this.display.height, deviceScaleFactor: 1 });
 
 		// Initialisation is finished
 		this.isInitialized = true;
 
-		this.fullRefresh();
+		await this.fullRefresh();
 		if (typeof (this.config.bufferDelay) === "number") {
-			(async () => {
-				await this.initObservers();
-			})();
+			await this.initObservers();
 		}
 	},
 
@@ -88,19 +84,22 @@ module.exports = NodeHelper.create({
 
 	initObservers: async function () {
 		await this.page.exposeFunction("puppeteerMutation", (rect, is4levels) => {
-			if (is4levels) {
-				// Display immediately
-				(async () => {
-					const imageDesc = await this.captureScreen(rect);
-					await this.displayIT8951(imageDesc, is4levels);
-				})();
-			} else {
-				// Add the area to process
-				this.stackAreas.push(rect);
-				// If this is not currently processing
-				if (this.stackAreas.length == 1) {
-					this.processStack();
-				}
+			// No full refresh running
+			if (this.refreshTimeout) {
+				if (is4levels) {
+					// Display immediately
+					(async () => {
+						const imageDesc = await this.captureScreen(rect);
+						await this.displayIT8951(imageDesc, is4levels);
+					})();
+				} else {
+					// Add the area to process
+					this.stackAreas.push(rect);
+					// If this is not currently processing
+					if (this.stackAreas.length == 1) {
+						this.processStack();
+					}
+				}	
 			}
 		});
 
@@ -146,15 +145,15 @@ module.exports = NodeHelper.create({
 		}
 	},
 
-	fullRefresh: function () {
+	fullRefresh: async function () {
 		self = this;
 		clearTimeout(this.refreshTimeout);
+		// Cancel partial refresh
+		this.stackAreas.length = 0;
 
 		Log.log("Full refresh eink");
-		(async () => {
-			const imageDesc = await this.captureScreen();
-			await this.displayIT8951(imageDesc);
-		})();
+		const imageDesc = await this.captureScreen();
+		await this.displayIT8951(imageDesc);
 
 		// Schedule next update
 		this.refreshTimeout = setTimeout(function (self) {
@@ -177,14 +176,14 @@ module.exports = NodeHelper.create({
 		// Display buffer
 		if (!this.config.mock) {
 			// Convert png to raw
-			const { data, info } = await Sharp(imageDesc.image)
+			const data = await Sharp(imageDesc.image)
 				// greyscale on 1 channel
 				.gamma().greyscale().toColourspace("b-w")
 				// output the raw pixels
 				.raw()
 				// data is a Buffer containing uint8 values (0-255)
 				// with each byte representing one pixel
-				.toBuffer({ resolveWithObject: true });
+				.toBuffer({ resolveWithObject: false });
 
 			if (is4levels !== true) {
 				// Check if buffer may not be a B/W only
