@@ -27,6 +27,6 @@
     "electron-rebuild": "^3.2.7"
   },
   "scripts": {
-    "postinstall": "# node_modules/.bin/electron-rebuild -e ../../node_modules/electron"
+    "postinstall": "node_modules/.bin/electron-rebuild -e ../../node_modules/electron"
   }
 }
