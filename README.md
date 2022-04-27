@@ -30,7 +30,7 @@ var config = {
 		{
 			module: "foo", // One of your module you want to be refreshed in B/W only
 			classes: "eink-4levels", // This class forces non flashy (but only on 4-levels gray) update of this module by MMM-IT8951
-		}
+		},
 	]
 }
 ```
@@ -77,12 +77,12 @@ sudo adduser $USER kmem
 
 ## Configuration options
 
-| Option           | Description
-|----------------- |------------
-| `updateInterval` | *Optional* Full refresh screen interval<br><br>**Type:** `int` (milliseconds)<br>Default: 60000 (1 minute)
-| `bufferDelay`    | *Optional* Delay before taking updated items in DOM to refresh parts of screen<br><br>**Type:** `int` (milliseconds)<br>Default: 1000 (1 second)<br>Set `undefined` to ignore partial refresh
-| `driverParam`    | *Optional* Parameter to initialize IT8951 driver. See https://github.com/gaweee/node-it8951#functions-calls<br>Default: `{MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}`
-| `mock`           | *Optional* `true` to retrieve not initialize IT8951 driver and store png files of changed areas in `/tmp` instead<br><br>**Type:** `boolean`<br>Default: `false`
+| Option			| Description
+|------------------ |-------------
+| `updateInterval`	| *Optional* Full refresh screen interval<br><br>**Type:** `int` (milliseconds)<br>Default: 60000 (1 minute)
+| `bufferDelay`		| *Optional* Delay before taking updated items in DOM to refresh parts of screen<br><br>**Type:** `int` (milliseconds)<br>Default: 1000 (1 second)<br>Set `undefined` to ignore partial refresh
+| `driverParam`		| *Optional* Parameter to initialize IT8951 driver. See https://github.com/gaweee/node-it8951#functions-calls<br>Default: `{MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}`
+| `mock`			| *Optional* `true` to retrieve not initialize IT8951 driver and store png files of changed areas in `/tmp` instead<br><br>**Type:** `boolean`<br>Default: `false`
 
 ## Notifications
 
