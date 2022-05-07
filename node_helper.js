@@ -125,14 +125,14 @@ module.exports = NodeHelper.create({
 	 */
 	initObservers: async function () {
 		/* puppeteerMutation */
-		await this.page.exposeFunction("puppeteerMutation", (rect, is4levels) => {
+		await this.page.exposeFunction("puppeteerMutation", (rect, hasClass4levels, hasClassNo4levels) => {
 			// No full refresh running
 			if (this.refreshTimeout) {
-				if (is4levels) {
+				if (hasClass4levels || this.config.defaultTo4levels && !hasClassNo4levels) {
 					// Display immediately
 					(async () => {
 						const imageDesc = await this.captureScreen(rect);
-						await this.displayIT8951(imageDesc, is4levels);
+						await this.displayIT8951(imageDesc, true);
 					})();
 				} else {
 					// Adds the area to process
@@ -156,6 +156,7 @@ module.exports = NodeHelper.create({
 				for (const mutation of mutations) {
 					rectMut = mutation.target.getBoundingClientRect();
 					is4levels = (mutation.target.closest(".eink-4levels") !== null);
+					isNo4levels = (mutation.target.closest(".no-eink-4levels") !== null);
 					if (rectMut.width !== 0 && rectMut.height !== 0) {
 						// Extends area to nearest pixels (with modulo 32 for left/right - hack needed because of some glitches at display)
 						rect = {
@@ -169,7 +170,7 @@ module.exports = NodeHelper.create({
 				if (rect.left < rect.right && rect.top < rect.bottom) {
 					const domRect = new DOMRect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
 					// Call exposed function
-					puppeteerMutation(domRect, is4levels);
+					puppeteerMutation(domRect, is4levels, isNo4levels);
 				}
 			});
 
@@ -198,6 +199,20 @@ module.exports = NodeHelper.create({
 	},
 
 	/**
+	 * Returns counts on number of modules visibles, visibles with class "eink-4levels", visible with class no-eink-4levels.
+	 * @returns {"nbModules": integer, "nbModules4levels": integer, "nbModulesNo4levels": integer}
+	 */
+	getNbVisibleModules: async function () {
+		return await this.page.evaluate(() => {
+			return {
+				nbModules: MM.getModules().filter(m => !m.hidden).length,
+				nbModules4levels: MM.getModules().withClass("eink-4levels").filter(m => !m.hidden).length,
+				nbModulesNo4levels: MM.getModules().withClass("no-eink-4levels").filter(m => !m.hidden).length
+			};
+		});
+	},
+
+	/**
 	 * Does a screenshot of browser then a full refresh of the e-ink screen
 	 */
 	fullRefresh: async function () {
@@ -208,7 +223,10 @@ module.exports = NodeHelper.create({
 
 		Log.log("Full refresh eink");
 		const imageDesc = await this.captureScreen();
-		await this.displayIT8951(imageDesc);
+
+		const nbModules = await this.getNbVisibleModules();
+		const is4levels = true || (this.config.defaultTo4levels && nbModules.nbModulesNo4levels == 0) || (!this.config.defaultTo4levels && nbModules.nbModules == nbModules.nbModules4levels);
+		await this.displayIT8951(imageDesc, is4levels);
 
 		// Schedules next update
 		this.refreshTimeout = setTimeout(function (self) {
@@ -288,13 +306,13 @@ module.exports = NodeHelper.create({
 				// Iterates by 2 bytes. Get the 4-high bits of each byte
 				// see https://www.waveshare.net/w/upload/c/c4/E-paper-mode-declaration.pdf for values to set
 				// DU4: This mode supports transitions from any gray tone to gray tones 1,6,11,16 (=> 0, 5, 10, 15)
-				buffer4b[i] = ((((buffer[2 * i] >> 4) % 4) * 5) << 4)
-					| (((buffer[(2 * i) + 1] >> 4) % 4) * 5);
+				buffer4b[i] = (((buffer[2 * i] >> 4) % 4) * 5)
+					| ((((buffer[(2 * i) + 1] >> 4) % 4) * 5) << 4);
 			}
 		} else {
 			for (let i = 0; i < buffer.length / 2; i++) {
 				// Iterate by 2 bytes. Get the 4-high bits of each byte
-				buffer4b[i] = (buffer[2 * i] & 0xF0) | (buffer[(2 * i) + 1] >> 4);
+				buffer4b[i] = (buffer[2 * i] >> 4) | (buffer[(2 * i) + 1] & 0xF0);
 			}
 		}
 		return buffer4b;

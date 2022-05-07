@@ -19,6 +19,7 @@ Module.register("MMM-IT8951", {
 		/* Display configuration */
 		updateInterval: 60 * 1000,	// Full refresh screen interval - default to 1 minute
 		bufferDelay: 1000,			// Delay before accounting updated items that have not an instant refresh rate on screen - default to 1 second
+		defaultTo4levels: false,
 
 		/* Driver configuration */
 		mock: false,	// Use a true IT8951 card or mock interface
