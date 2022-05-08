@@ -40,6 +40,18 @@ var config = {
 }
 ```
 
+To use a specific color within the 4 levels of gray, this colors can be defined in CSS and used:
+
+```css
+:root {
+	/* Gray levels for IT8951 */
+	--gray4levels-1: #fff;
+	--gray4levels-2: #aaa;
+	--gray4levels-3: #666;
+	--gray4levels-4: #000;
+}
+```
+
 ## Installation
 
 ```sh

@@ -259,7 +259,7 @@ module.exports = NodeHelper.create({
 		if (!this.config.mock) {
 			// Convert png to raw
 			const data = await Sharp(imageDesc.image)
-				// greyscale on 1 channel
+				// grayscale on 1 channel
 				.gamma().greyscale().toColourspace("b-w")
 				// output the raw pixels
 				.raw()
@@ -285,7 +285,7 @@ module.exports = NodeHelper.create({
 			await Sharp(imageDesc.image)
 				// Apply equivalent transformation as for e-paper
 				.gamma().greyscale().toColourspace("b-w")
-				// 16 colors (shades of grey)
+				// 16 colors (shades of gray)
 				.png({ colours: is4levels ? 4 : 16 })
 				// Save file
 				.toFile("/tmp/screenshot-" + this.inc + ".png");
@@ -305,9 +305,9 @@ module.exports = NodeHelper.create({
 			for (let i = 0; i < buffer.length / 2; i++) {
 				// Iterates by 2 bytes. Get the 4-high bits of each byte
 				// see https://www.waveshare.net/w/upload/c/c4/E-paper-mode-declaration.pdf for values to set
-				// DU4: This mode supports transitions from any gray tone to gray tones 1,6,11,16 (=> 0, 5, 10, 15)
-				buffer4b[i] = (((buffer[2 * i] >> 4) % 4) * 5)
-					| ((((buffer[(2 * i) + 1] >> 4) % 4) * 5) << 4);
+				// DU4: This mode supports transitions from any gray tone to gray tones 1, 6, 11, 16 (=> 0, 5, 10, 15)
+				buffer4b[i] = (parseInt((buffer[2 * i] >> 4) / 4) * 5)
+					| ((parseInt((buffer[(2 * i) + 1] >> 4) / 4) * 5) << 4);
 			}
 		} else {
 			for (let i = 0; i < buffer.length / 2; i++) {
