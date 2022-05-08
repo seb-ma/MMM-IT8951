@@ -306,8 +306,8 @@ module.exports = NodeHelper.create({
 				// Iterates by 2 bytes. Get the 4-high bits of each byte
 				// see https://www.waveshare.net/w/upload/c/c4/E-paper-mode-declaration.pdf for values to set
 				// DU4: This mode supports transitions from any gray tone to gray tones 1, 6, 11, 16 (=> 0, 5, 10, 15)
-				buffer4b[i] = (parseInt((buffer[2 * i] >> 4) / 4) * 5)
-					| ((parseInt((buffer[(2 * i) + 1] >> 4) / 4) * 5) << 4);
+				buffer4b[i] = (parseInt((buffer[2 * i] >> 4) / 5) * 5)
+					| ((parseInt((buffer[(2 * i) + 1] >> 4) / 5) * 5) << 4);
 			}
 		} else {
 			for (let i = 0; i < buffer.length / 2; i++) {
