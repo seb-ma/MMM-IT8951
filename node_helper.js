@@ -50,7 +50,7 @@ module.exports = NodeHelper.create({
 		// Starts Puppeteer with IT8951 resolution
 		(async () => {
 			let puppeteerArgs = ["--disable-gpu"]; // Hack: sometimes puppeteer does not start if gpu is enabled
-			if (isCurrentUserRoot()) {
+			if (isCurrentUserRoot) {
 				puppeteerArgs.push("--no-sandbox");
 			}
 			this.browser = await Puppeteer.launch({ args: puppeteerArgs });
