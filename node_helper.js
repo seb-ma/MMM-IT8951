@@ -38,24 +38,19 @@ module.exports = NodeHelper.create({
 	stackAreas: [],
 
 	/**
-	 * Returns true if user running process is `root
-	 * @returns {boolean} true if user running process is `root`
-	 */
-	isCurrentUserRoot: function () {
-		return process.getuid() == 0; // UID 0 is always root
-	},
-
-	/**
 	 * Starts the node helper of the module
 	 * @see `node_helper.start`
 	 * @see <https://docs.magicmirror.builders/development/node-helper.html#start>
 	 */
 	start: function () {
+		// Returns true if user running process is `root
+		const isCurrentUserRoot = process.getuid() == 0; // UID 0 is always root
+
 		Log.log("Starting node helper for: " + this.name);
 		// Starts Puppeteer with IT8951 resolution
 		(async () => {
 			let puppeteerArgs = ["--disable-gpu"]; // Hack: sometimes puppeteer does not start if gpu is enabled
-			if (this.isCurrentUserRoot()) {
+			if (isCurrentUserRoot()) {
 				puppeteerArgs.push("--no-sandbox");
 			}
 			this.browser = await Puppeteer.launch({ args: puppeteerArgs });
@@ -90,7 +85,7 @@ module.exports = NodeHelper.create({
 		this.isInitialized = true;
 
 		// Refreshes screen and registers DOM observer on Puppeteer browser
-		await this.fullRefresh();
+		await this.fullRefresh(true);
 		if (typeof (this.config.bufferDelay) === "number") {
 			await this.initObservers();
 		}
@@ -214,8 +209,9 @@ module.exports = NodeHelper.create({
 
 	/**
 	 * Does a screenshot of browser then a full refresh of the e-ink screen
+	 * @param {boolean} force16levels Force a refresh with 16 levels (useful to remove ghosting)
 	 */
-	fullRefresh: async function () {
+	fullRefresh: async function (force16levels = false) {
 		const self = this;
 		clearTimeout(this.refreshTimeout);
 		// Cancels partial refresh
@@ -225,12 +221,12 @@ module.exports = NodeHelper.create({
 		const imageDesc = await this.captureScreen();
 
 		const nbModules = await this.getNbVisibleModules();
-		const is4levels = true || (this.config.defaultTo4levels && nbModules.nbModulesNo4levels == 0) || (!this.config.defaultTo4levels && nbModules.nbModules == nbModules.nbModules4levels);
+		const is4levels = !force16levels && ((this.config.defaultTo4levels && nbModules.nbModulesNo4levels == 0) || (!this.config.defaultTo4levels && nbModules.nbModules == nbModules.nbModules4levels));
 		await this.displayIT8951(imageDesc, is4levels);
 
 		// Schedules next update
 		this.refreshTimeout = setTimeout(function (self) {
-			self.fullRefresh();
+			self.fullRefresh(false);
 		}, this.config.updateInterval, self);
 	},
 
@@ -348,7 +344,8 @@ module.exports = NodeHelper.create({
 			this.initializeEink();
 		} else if (this.isInitialized && notification === "IT8951_ASK_FULL_REFRESH") {
 			// Full refresh of screen
-			this.fullRefresh();
+			const force16levels = (typeof payload !== 'boolean' || payload);
+			this.fullRefresh(force16levels);
 		}
 	},
 

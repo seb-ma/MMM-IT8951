@@ -116,9 +116,20 @@ sudo adduser $USER kmem
 ## Notifications
 
 To force a full refresh of the e-ink screen, the notification `IT8951_ASK_FULL_REFRESH` must be sent.
+Payload can be set to force a refresh with 4-levels (`false`) or 16-levels (`undefined` or `true`).
 
 Example to send it from another module:
 
 ```js
+// Refresh with 16-levels
 this.sendNotification("IT8951_ASK_FULL_REFRESH");
+// […]
+
+// Refresh with 16-levels
+this.sendNotification("IT8951_ASK_FULL_REFRESH", true);
+// […]
+
+// Refresh with 4-levels
+this.sendNotification("IT8951_ASK_FULL_REFRESH", false);
+// […]
 ```

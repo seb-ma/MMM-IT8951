@@ -38,8 +38,8 @@ Module.register("MMM-IT8951", {
 			// Initializes node helper
 			this.sendSocketNotification("CONFIG", this.config);
 		} else if (notification === "IT8951_ASK_FULL_REFRESH") {
-			// Full refresh of screen
-			this.sendSocketNotification("IT8951_ASK_FULL_REFRESH");
+			// Full refresh of screen (payload is a boolean to have update screen with the 16-levels)
+			this.sendSocketNotification(notification, payload);
 		}
 	},
 
