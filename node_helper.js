@@ -272,10 +272,16 @@ module.exports = NodeHelper.create({
 			const DISPLAY_UPDATE_MODE_DU4 = 7;
 			const display_mode = is4levels ? DISPLAY_UPDATE_MODE_DU4 : false;
 
+			// Wake up display
+			this.display.activate();
+			this.display.wait_for_ready();
+			// Draw area
 			this.display.draw(this.downscale8bitsTo4bits(data, is4levels),
 				imageDesc.rect.x, imageDesc.rect.y,
 				imageDesc.rect.width, imageDesc.rect.height,
 				display_mode);
+			// Set display in sleep mode
+			this.display.sleep();
 		} else {
 			this.inc = (this.inc === undefined) ? 0 : (this.inc + 1) % 200;
 			await Sharp(imageDesc.image)
