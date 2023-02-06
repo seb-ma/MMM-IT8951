@@ -38,6 +38,11 @@ module.exports = NodeHelper.create({
 	stackAreas: [],
 
 	/**
+	 * IT8951 in run mode? (else sleep mode)
+	 */
+	IT8951_sysrun: undefined,
+
+	/**
 	 * Starts the node helper of the module
 	 * @see `node_helper.start`
 	 * @see <https://docs.magicmirror.builders/development/node-helper.html#start>
@@ -70,6 +75,7 @@ module.exports = NodeHelper.create({
 		this.display = new IT8951(this.config.driverParam);
 		if (!this.config.mock) {
 			this.display.init();
+			this.IT8951_sleep();
 			Log.log("IT8951 initialized");
 		} else {
 			this.display = {
@@ -100,6 +106,7 @@ module.exports = NodeHelper.create({
 		// Waits before processing stack
 		await new Promise(r => setTimeout(r, this.config.bufferDelay));
 		let rectDone = [];
+		this.IT8951_activate();
 		while (this.stackAreas.length > 0) {
 			const rect = this.stackAreas.shift();
 			const rectStr = JSON.stringify(rect);
@@ -108,9 +115,10 @@ module.exports = NodeHelper.create({
 				rectDone.push(rectStr);
 				Log.debug("Display IT8951:", rectStr);
 				const imageDesc = await this.captureScreen(rect);
-				await this.displayIT8951(imageDesc);
+				await this.IT8951_draw(imageDesc);
 			}
 		}
+		this.IT8951_sleep();
 	},
 
 	/**
@@ -127,7 +135,9 @@ module.exports = NodeHelper.create({
 					// Display immediately
 					(async () => {
 						const imageDesc = await this.captureScreen(rect);
-						await this.displayIT8951(imageDesc, true);
+						this.IT8951_activate();
+						await this.IT8951_draw(imageDesc, true);
+						this.IT8951_sleep();
 					})();
 				} else {
 					// Adds the area to process
@@ -222,7 +232,9 @@ module.exports = NodeHelper.create({
 
 		const nbModules = await this.getNbVisibleModules();
 		const is4levels = !force16levels && ((this.config.defaultTo4levels && nbModules.nbModulesNo4levels == 0) || (!this.config.defaultTo4levels && nbModules.nbModules == nbModules.nbModules4levels));
-		await this.displayIT8951(imageDesc, is4levels);
+		this.IT8951_activate();
+		await this.IT8951_draw(imageDesc, is4levels);
+		this.IT8951_sleep();
 
 		// Schedules next update
 		this.refreshTimeout = setTimeout(function (self) {
@@ -250,7 +262,7 @@ module.exports = NodeHelper.create({
 	 * @param {Image, DOMRect} imageDesc PNG and area of the screenshot
 	 * @param {boolean} is4levels Indicates if area can be displayed with only 4 levels of gray
 	 */
-	displayIT8951: async function (imageDesc, is4levels) {
+	IT8951_draw: async function (imageDesc, is4levels) {
 		// Display buffer
 		if (!this.config.mock) {
 			// Convert png to raw
@@ -272,16 +284,11 @@ module.exports = NodeHelper.create({
 			const DISPLAY_UPDATE_MODE_DU4 = 7;
 			const display_mode = is4levels ? DISPLAY_UPDATE_MODE_DU4 : false;
 
-			// Wake up display
-			this.display.activate();
-			this.display.wait_for_ready();
 			// Draw area
 			this.display.draw(this.downscale8bitsTo4bits(data, is4levels),
 				imageDesc.rect.x, imageDesc.rect.y,
 				imageDesc.rect.width, imageDesc.rect.height,
 				display_mode);
-			// Set display in sleep mode
-			this.display.sleep();
 		} else {
 			this.inc = (this.inc === undefined) ? 0 : (this.inc + 1) % 200;
 			await Sharp(imageDesc.image)
@@ -292,6 +299,27 @@ module.exports = NodeHelper.create({
 				// Save file
 				.toFile("/tmp/screenshot-" + this.inc + ".png");
 		}
+	},
+
+	/**
+	 * Wake up display
+	 */
+	IT8951_activate: function () {
+		if (!this.config.mock && this.IT8951_sysrun !== true) {
+			this.display.activate();
+			this.display.wait_for_ready();
+		}
+		this.IT8951_sysrun = true;
+	},
+
+	/**
+	 * Sleep down display
+	 */
+	IT8951_sleep: function () {
+		if (!this.config.mock && this.IT8951_sysrun !== false) {
+			this.display.sleep();
+		}
+		this.IT8951_sysrun = false;
 	},
 
 	/**
