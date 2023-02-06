@@ -198,6 +198,7 @@ module.exports = NodeHelper.create({
 
 		// Stops IT8951
 		if (this.config.mock === false && this.display !== undefined) {
+			this.IT8951_activate();
 			this.display.clear();
 			this.display.close();
 		}
@@ -317,6 +318,7 @@ module.exports = NodeHelper.create({
 	 */
 	IT8951_sleep: function () {
 		if (!this.config.mock && this.IT8951_sysrun !== false) {
+			this.display.wait_for_display_ready();
 			this.display.sleep();
 		}
 		this.IT8951_sysrun = false;
