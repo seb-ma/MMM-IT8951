@@ -3,10 +3,10 @@
 This is a module for the [MagicMirror²](https://github.com/MichMich/MagicMirror/).
 
 This module communicates with a IT8951 card to display MagicMirror² on a e-ink screen.
-It opens MagicMirror² page on a Chrome browser (with Puppeteer) and observe each DOM update.
+It opens MagicMirror² page on a Chrome browser (with Puppeteer) and observes each DOM update.
 Periodically, the e-ink is fully refreshed and partially refreshed on DOM update.
 
-Partial refresh is done in a flashy way by default (that is needed to support the 16 gray levels) but if image if only B/W (without gray), the refresh mode is changed to have a direct update without flash.
+Partial refresh is done in a flashy way by default (that is needed to support the 16 gray levels) but if image is only B/W (without gray), the refresh mode is changed to have a direct update without flash.
 Another way to have a fast refresh without flash is by adding the CSS class `eink-4levels` to a module. Thus, the refresh is forced to 4-level gray only.
 
 The IT8951 is typically used by some Waveshare e-paper screens.
