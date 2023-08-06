@@ -60,7 +60,7 @@ module.exports = NodeHelper.create({
 			}
 			let launchOptions = { args: puppeteerArgs };
 			if (this.config.puppeteerBrowser) {
-				launchOptions.executablePath = puppeteerBrowser;
+				launchOptions.executablePath = this.config.puppeteerBrowser;
 			}
 			this.browser = await Puppeteer.launch(launchOptions);
 			this.page = await this.browser.newPage();
