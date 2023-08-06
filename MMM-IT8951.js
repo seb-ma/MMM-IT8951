@@ -21,9 +21,6 @@ Module.register("MMM-IT8951", {
 		bufferDelay: 1000,			// Delay before accounting updated items that have not an instant refresh rate on screen - default to 1 second
 		defaultTo4levels: false,
 
-		/* Puppeteer configuration */
-		puppeteerBrowser: "/usr/bin/chromium-browser", // empty to use built-in puppeteer browser, browser path otherwise
-
 		/* Driver configuration */
 		mock: false,	// Use a true IT8951 card or mock interface
 		driverParam: { MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480 }, // see https://github.com/gaweee/node-it8951#functions-calls

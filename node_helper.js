@@ -51,23 +51,20 @@ module.exports = NodeHelper.create({
 		// Returns true if user running process is `root
 		const isCurrentUserRoot = process.getuid() == 0; // UID 0 is always root
 
-		Log.log("Starting node helper for: " + this.name);
+		Log.log(`Starting node helper for: ${this.name}`);
 		// Starts Puppeteer with IT8951 resolution
 		(async () => {
 			let puppeteerArgs = ["--disable-gpu"]; // Hack: sometimes puppeteer does not start if gpu is enabled
 			if (isCurrentUserRoot) {
 				puppeteerArgs.push("--no-sandbox");
 			}
-			let launchOptions = { args: puppeteerArgs };
-			if (this.config.puppeteerBrowser) {
-				launchOptions.executablePath = this.config.puppeteerBrowser;
-			}
-			this.browser = await Puppeteer.launch(launchOptions);
+			// Use OS browser instead of built-in puppeteer (remove executablePath to use it)
+			this.browser = await Puppeteer.launch({ executablePath: "/usr/bin/chromium-browser", args: puppeteerArgs });
 			this.page = await this.browser.newPage();
 			const url = this.url;
 			await this.page.goto(url, { waitUntil: "load" });
 
-			Log.log("Puppeteer launched on " + url);
+			Log.log(`Puppeteer launched on ${url}`);
 		})();
 	},
 

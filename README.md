@@ -110,7 +110,6 @@ sudo adduser $USER kmem
 | `updateInterval`	| *Optional* Full refresh screen interval<br><br>**Type:** `int` (milliseconds)<br>Default: 60000 (1 minute)
 | `bufferDelay`		| *Optional* Delay before taking updated items in DOM to refresh parts of screen (only applyied to no 4-levels parts. 4-levels parts are always instantly refreshed)<br><br>**Type:** `int` (milliseconds)<br>Default: 1000 (1 second)<br>Set `undefined` to ignore partial refresh, 0 to refresh immediately
 | `defaultTo4levels`| *Optional* If `true`,  it consider all modules are on 4-levels gray unless modules having class "no-eink-4levels"<br>If `false`,  it consider all modules are on 16-levels gray unless modules having class "eink-4levels"<br><br>**Type:** `boolean`<br>Default: `false`
-| `puppeteerBrowser`| empty to use built-in puppeteer browser, browser path otherwise <br>Default: `"/usr/bin/chromium-browser"`
 | `driverParam`		| *Optional* Parameter to initialize IT8951 driver. See https://github.com/gaweee/node-it8951#functions-calls<br>Default: `{MAX_BUFFER_SIZE: 4096, ALIGN4BYTES: true, VCOM: 1480}`
 | `mock`			| *Optional* `true` to retrieve not initialize IT8951 driver and store png files of changed areas in `/tmp` instead<br><br>**Type:** `boolean`<br>Default: `false`
 
