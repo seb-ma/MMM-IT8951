@@ -58,7 +58,11 @@ module.exports = NodeHelper.create({
 			if (isCurrentUserRoot) {
 				puppeteerArgs.push("--no-sandbox");
 			}
-			this.browser = await Puppeteer.launch({ args: puppeteerArgs });
+			let launchOptions = { args: puppeteerArgs };
+			if (this.config.puppeteerBrowser) {
+				launchOptions.executablePath = puppeteerBrowser;
+			}
+			this.browser = await Puppeteer.launch(launchOptions);
 			this.page = await this.browser.newPage();
 			const url = this.url;
 			await this.page.goto(url, { waitUntil: "load" });
