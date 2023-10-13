@@ -63,13 +63,13 @@ cd MMM-IT8951
 If nodejs version is compliant:
 
 ```
-npm install --only=production
+npm install --no-audit --no-fund --no-update-notifier --only=prod --omit=dev
 ```
 
 Else, a full install + rebuild dependency may be needed:
 
 ```
-npm install; npm rebuild rpio --update-binary
+npm install --no-audit --no-fund --no-update-notifier ; npm rebuild rpio --update-binary
 ```
 
 ### OS configuration related
