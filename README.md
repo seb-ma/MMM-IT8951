@@ -4,9 +4,9 @@ This is a module for the [MagicMirror²](https://github.com/MichMich/MagicMirror
 
 This module communicates with a IT8951 card to display MagicMirror² on a e-ink screen.
 It opens MagicMirror² page on a Chrome browser (with Puppeteer) and observes each DOM update.
-Periodically, the e-ink is fully refreshed and partially refreshed on DOM update.
+The e-ink is partially refreshed on DOM update and fully refreshed periodically.
 
-Partial refresh is done in a flashy way by default (that is needed to support the 16 gray levels) but if image is only B/W (without gray), the refresh mode is changed to have a direct update without flash.
+Partial refresh is done in a flashy way by default (that is needed to support the 16 gray levels) but if image is only B/W or has only colors in the 4 gray-levels (`gray4levels-x`), the refresh mode is changed to have a direct update without flash.
 Another way to have a fast refresh without flash is by adding the CSS class `eink-4levels` to a module. Thus, the refresh is forced to 4-level gray only.
 
 The IT8951 is typically used by some Waveshare e-paper screens.
@@ -40,7 +40,7 @@ var config = {
 }
 ```
 
-To use a specific color within the 4 levels of gray, this colors can be defined in CSS and used:
+To use a specific color within the 4 levels of gray, these colors are defined in CSS and can be used:
 
 ```css
 :root {
@@ -51,6 +51,8 @@ To use a specific color within the 4 levels of gray, this colors can be defined 
 	--gray4levels-4: #000;
 }
 ```
+
+When a refresh is done on an area that contains only these 4 colors, the refresh will not be flashy.
 
 ## Installation
 
@@ -118,7 +120,7 @@ sudo adduser $USER kmem
 To force a full refresh of the e-ink screen, the notification `IT8951_ASK_FULL_REFRESH` must be sent.
 Payload can be set to force a refresh with 4-levels (`false`) or 16-levels (`undefined` or `true`).
 
-Example to send it from another module:
+Examples to send it from another module:
 
 ```js
 // Refresh with 16-levels
