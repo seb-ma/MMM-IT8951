@@ -43,4 +43,13 @@ Module.register("MMM-IT8951", {
 		}
 	},
 
+	/**
+	 * Returns the CSS files adding gray levels to root
+	 * @see `module.getStyles`
+	 * @see <https://docs.magicmirror.builders/development/core-module-file.html#getstyles>
+	 * @returns {Array}
+	 */
+	getStyles: function () {
+		return [`${this.name}.css`];
+	},
 });

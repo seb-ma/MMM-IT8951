@@ -77,7 +77,7 @@ module.exports = NodeHelper.create({
 		if (!this.config.mock) {
 			this.display.init();
 			this.IT8951_sleep();
-			Log.log("IT8951 initialized");
+			Log.log(`IT8951 initialized (${this.display.width}x${this.display.height})`);
 		} else {
 			this.display = {
 				width: config.electronOptions.width ? config.electronOptions.width : 1872,
@@ -278,8 +278,8 @@ module.exports = NodeHelper.create({
 				.toBuffer({ resolveWithObject: false });
 
 			if (is4levels !== true) {
-				// Check if buffer may not be a B/W only
-				is4levels = this.isBufferOnlyBW(data);
+				// Check if buffer may not be with the 4 levels only
+				is4levels = this.isBufferOnlyGray4Levels(data);
 			}
 			// A fast non-flashy update mode that can go from any gray scale color to black or white
 			const DISPLAY_UPDATE_MODE_DU = 1;
@@ -352,15 +352,15 @@ module.exports = NodeHelper.create({
 	},
 
 	/**
-	 * Returns true if the buffer has only black and white pixels
+	 * Returns true if the buffer has only pixels within the 4 levels of gray
 	 * @param {Buffer} buffer Buffer with raw image to check
-	 * @returns {boolean} true the buffer is has only pixels black and white
+	 * @returns {boolean} true the buffer has only pixels within the 4 levels of gray
 	 */
-	isBufferOnlyBW: function (buffer) {
+	isBufferOnlyGray4Levels: function (buffer) {
 		for (let i = 0; i < buffer.length; i++) {
 			// Only checks the 4-high bits (the 4-low bits will be ignored when pixel will be converted to 16 gray-levels)
 			const val = buffer[i] >> 4;
-			if (val !== 0xF && val !== 0) {
+			if (val !== 0xF && val !== 0xA && val !== 0x6 && val !== 0) {
 				return false;
 			}
 		}
