@@ -71,7 +71,7 @@ npm install --no-audit --no-fund --no-update-notifier --only=prod --omit=dev
 Else, a full install + rebuild dependency may be needed:
 
 ```
-npm install --no-audit --no-fund --no-update-notifier ; npm rebuild rpio --update-binary
+npm install --no-audit --no-fund --no-update-notifier; npm rebuild rpio --update-binary
 ```
 
 ### OS configuration related
