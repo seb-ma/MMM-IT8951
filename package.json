@@ -18,14 +18,14 @@
 	],
 	"dependencies": {
 		"node-it8951": "^0.0.1",
-		"puppeteer": "^21.6.1",
-		"sharp": "^0.33.1"
+		"puppeteer": "^22.15.0",
+		"sharp": "^0.33.4"
 	},
 	"devDependencies": {
-		"@electron/rebuild": "^3.4.1",
+		"@electron/rebuild": "^3.6.0",
 		"gyp": "^0.5.0",
-		"node-abi": "^3.52.0",
-		"node-gyp": "^10.0.1"
+		"node-abi": "^3.65.0",
+		"node-gyp": "^10.2.0"
 	},
 	"overrides": {
 		"rpio": {
